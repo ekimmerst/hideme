@@ -16,8 +16,8 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 11, 2026: version 0.6.0; interface version 16001.
-- Last verified commit: a4f6394 (Add health-aware player frame visibility and English documentation).
+- As of October 11, 2026: version 0.7.1; interface version 16001.
+- Last verified commit: 969154d (Add target and combat visibility for active toolbars).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
 
@@ -34,6 +34,8 @@ Controlled exclusively through chat, without a settings interface.
 
 - /hideme bag-bar on: hide the bag bar.
 - /hideme bag-bar off: show the bag bar.
+- /hideme exp-bar on: show the entire status-bar area and borders for two seconds after each player XP update or level-up, restarting the interval on another XP change.
+- /hideme exp-bar off: always show the available status-bar area and borders.
 - /hideme micro-menu on: hide the micro menu.
 - /hideme micro-menu off: show the micro menu.
 - /hideme player-frame on: show the player frame with a target, in combat, or below full health.
@@ -58,6 +60,7 @@ it does not measure actual visibility when other addons interfere.
 - bag-bar: HideMeDB.hideBagBar; frame BagsBar.
 - micro-menu: HideMeDB.hideMicroMenu; frames MicroMenuContainer and MicroMenu, if available.
 - HideMeDB is saved per character through SavedVariablesPerCharacter.
+- exp-bar: HideMeDB.hideExpBar. Version 0.7.0 hid only XP content; the user requested hiding the whole area after seeing its remaining border. Version 0.7.1 gates StatusTrackingBarManager alpha, including borders and all XP/reputation/other contents. Legacy fallback frames: MainMenuExpBar, ReputationWatchBar, MainMenuBarMaxLevelBar. Show and guarded SetAlpha hooks preserve the current interval without recursion. PLAYER_XP_UPDATE (player only) and PLAYER_LEVEL_UP restart a cancellable C_Timer.NewTimer for two seconds; GetTime deadline prevents hooks from revealing it after expiry. Non-XP updates do not trigger display. Mode changes defer in combat; pulses and expiry update alpha during combat. Enabling/reloading does not flash. Later ADDON_LOADED retries discovery. Transparent frames may retain mouse input.
 - toolbars: HideMeDB.hideToolbars. MainActionBar, MultiBarBottomLeft, MultiBarBottomRight, MultiBarRight, MultiBarLeft, MultiBar5/6/7, PetActionBar, StanceBar, PossessActionBar and OverrideActionBar, when available. ApplyToolbars changes alpha only, preserving Blizzard's activation/paging/special-state visibility; it never calls Show/Hide or replaces their state drivers. Transparent bars retain key bindings and may receive mouse input. Third-party bars are not covered.
 - Toolbar alpha updates on target and combat changes; Show hooks restore the current alpha. Hook setup and applied-mode changes wait until out of combat, while alpha can update in combat. Later ADDON_LOADED events retry optional toolbar discovery. Inactive bars remain inactive with off.
 - player-frame: HideMeDB.hidePlayerFrame; frame PlayerFrame. With curve support, the frame stays shown and health controls alpha via UnitHealthPercent("player", false, healthAlphaCurve). A Step curve maps fraction 0 to alpha 1 and fraction 1 to alpha 0. The result is passed directly to SetAlpha, never compared or inspected. Mana is not queried. Transparent frames may remain interactive.
@@ -93,8 +96,11 @@ it does not measure actual visibility when other addons interfere.
 - Version 0.5.2 passed Lua 5.1 syntax and simulated target/combat transitions, enabling with an existing target, Show hooks, deferred on/off changes, invalid commands, other targets, missing-frame retry, and saved-setting reapplication. Resource API stubs raised errors if called; no health/mana reads occurred. git diff --check passed. The user subsequently confirmed player-frame hiding works in game.
 - The user confirmed UnitHealthPercent and C_CurveUtil.CreateCurve exist on the beta client. Version 0.5.3 implements the researched curve-to-alpha path. Lua 5.1 simulations passed for comparison-rejecting secret-result sentinels, health boundaries (including 99.999% and 100%), maximum-health changes, target/combat transitions, deferred modes, Show hooks, missing-frame retry, saved-setting reapplication and existing targets; raw resource APIs were forbidden by the harness. git diff --check passed. The user subsequently confirmed the health/alpha behavior works in game.
 - Do not report tests that were not run as passed.
+- Version 0.7.1 passed Lua 5.1 syntax and simulations for manager-wide alpha, Show/SetAlpha enforcement without recursion, XP pulse restart, level-up, expiry during combat, deferred off, timer cancellation, legacy XP/reputation fallback and independence from existing settings. Native rendering of borders and all child bar types still needs in-game verification.
+- Version 0.7.0 passed Lua 5.1 syntax and XP-bar simulations for two-second expiry and restart, non-player filtering, level-up, off cancelling an active timer, combat expiry and deferred modes, Show hooks, legacy and managed XP frames, inactive/reputation bars remaining untouched, saved-setting reapplication, late loading and independence from other settings. git diff --check passed. In-game verification remains pending.
 - Version 0.6.0 passed Lua 5.1 syntax and toolbar simulations for target/combat transitions, deferred on/off, inactive bars staying inactive, late-loaded bars, Show hooks, invalid commands, saved-setting reapplication and independence from the existing targets. The harness also verified toolbar state drivers were untouched. The user confirmed on October 11, 2026 that toolbars works in game; the full compatibility test matrix remains pending.
-- Test in game: all four targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Test in game: all five targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Test exp-bar: complete border/content disappearance including reputation and other status bars, XP gain, repeated gains inside two seconds, level-up/reset, expiry during combat, off while a pulse is active, on/off during combat, /reload, late loading, maximum level, and independence from toolbar settings. Non-XP updates must not reveal the area. Version 0.7.1 awaits in-game confirmation.
 - Test toolbars: target select/clear, combat enter/leave, deferred mode changes, enabling/disabling additional bars while hiding is enabled, pet/stance/possess/override states, key bindings, and independence from bag-bar, micro-menu and player-frame settings.
 - Also test the player frame: select/clear a target, enter/leave combat (including clearing a target during combat), enable with a target already selected, change modes during combat, lose health and regenerate to exactly full health. Mana changes must not affect visibility. Verify transparent-frame mouse behavior and off restoring alpha to 1.
 - Verify that UI updates do not permanently reveal hidden elements and that off restores them.

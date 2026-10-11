@@ -19,6 +19,8 @@ Enter all commands in the WoW chat.
 | --- | --- |
 | `/hideme bag-bar on` | Hide the bag bar |
 | `/hideme bag-bar off` | Show the bag bar |
+| `/hideme exp-bar on` | Show all status bars and their borders for 2 seconds after each XP change |
+| `/hideme exp-bar off` | Always show available status bars and their borders |
 | `/hideme micro-menu on` | Hide the micro menu |
 | `/hideme micro-menu off` | Show the micro menu |
 | `/hideme player-frame on` | Show the player frame with a target, in combat, or below full health |
@@ -37,9 +39,11 @@ Settings are saved **per character** and persist across restarts and `/reload`. 
 
 With `toolbars on`, the standard action bars become transparent without a target outside combat. With a target or in combat, they have full opacity. This covers the main action bar, seven additional action bars, and available pet, stance, possess and override bars. Blizzard continues to control which bars are enabled and appropriate for the current state; `off` restores full opacity without enabling disabled bars. Key bindings remain usable, and transparent bars can still receive mouse input. Bars supplied by other addons are not covered.
 
+With `exp-bar on`, the entire status-bar area becomes transparent, including its borders and all experience, reputation and other status-bar content. A player XP update or level-up reveals the whole area for two seconds; another XP change restarts that interval. Reputation and other non-XP updates do not start an interval. Enabling the setting or reloading does not start a display interval. The timer also runs during combat, while mode changes made in combat wait until combat ends. `off` restores full opacity; Blizzard still decides which status bars are available. Transparent status bars may still receive mouse input.
+
 ## Compatibility
 
-- Version: **0.6.0**
+- Version: **0.7.1**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
@@ -48,3 +52,4 @@ If the required health/curve APIs are unavailable, HideMe falls back to showing 
 
 The user confirmed target/combat hiding in version 0.5.2 and health-based visibility in version 0.5.3 on the beta client. The full compatibility test matrix remains pending.
 The user confirmed the toolbars behavior in version 0.6.0 works on the beta client. The full compatibility test matrix remains pending.
+The full status-bar hiding behavior in version 0.7.1 requires in-game verification.
