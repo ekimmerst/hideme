@@ -16,8 +16,8 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 11, 2026: version 0.13.0; interface version 16001.
-- Last verified commit: 2c03f56 (Add addon compartment icon visibility command).
+- As of October 11, 2026: version 0.13.1; interface version 16001.
+- Last verified commit: 540b89e (Add bulk visibility commands and update usage documentation).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
 
@@ -25,6 +25,8 @@
 
 - HideMe.toc: metadata, version, interface version, and Lua load order.
 - HideMe.lua: entire implementation.
+- Media/Icon.tga: 256x256 uncompressed 32-bit closed-eye addon-list texture, referenced by IconTexture in HideMe.toc.
+- Media/Icon.png: original generated artwork.
 - README.md: installation and usage.
 - AGENTS.md: information for future work.
 
@@ -152,3 +154,10 @@ it does not measure actual visibility when other addons interfere.
 - Commit and push according to the current user request. Previous publication does not authorize automatic future pushes.
 - If access is unavailable, finish local work and provide concrete PowerShell commands for the user's normal session.
 - Preserve unrelated changes; do not use destructive Git commands without authorization.
+
+## Addon list artwork
+
+- Version 0.13.1 adds a custom golden closed-eye icon with a violet glow in a hand-painted WoW style. No Lua behavior changes.
+- Generated with the built-in image_gen tool, then converted to a 256x256 uncompressed BGRA TGA with top-left origin.
+- IconTexture points to Interface\AddOns\HideMe\Media\Icon (extension omitted). Keep Media when installing.
+- Native addon-list rendering requires in-game verification. Restart WoW after adding the new texture if /reload does not show it.

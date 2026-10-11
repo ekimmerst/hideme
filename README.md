@@ -7,6 +7,7 @@ A small addon for the current **WoW Forever Beta** that controls the visibility 
 1. Download or clone this repository.
 2. Place the files in `World of Warcraft/_classic_beta_/Interface/AddOns/HideMe/`.
 3. `HideMe.toc` and `HideMe.lua` must be directly inside the `HideMe` folder.
+   Keep the included `Media` folder with the addon; it contains the closed-eye icon used in the addon list.
 4. Restart WoW and enable **HideMe** in the addon list.
 
 After changing an addon that is already loaded, you can reload the interface using `/reload`.
@@ -73,7 +74,7 @@ With `exp-bar on`, the entire status-bar area becomes transparent, including its
 
 ## Compatibility
 
-- Version: **0.13.0**
+- Version: **0.13.1**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
