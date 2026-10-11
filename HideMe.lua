@@ -84,6 +84,8 @@ end
 
 local function PrintHelp()
     Print("Available commands (on: enable hiding, off: disable hiding):")
+    Print("/hideme all on - Set all supported hiding settings to on.")
+    Print("/hideme all off - Set all supported hiding settings to off.")
     Print("/hideme addons-icon on - Hide the minimap addon compartment icon.")
     Print("/hideme addons-icon off - Show the minimap addon compartment icon.")
     Print("/hideme bag-bar on - Hide the bag bar.")
@@ -546,8 +548,28 @@ SlashCmdList.HIDEME = function(message)
 
     local name, mode = message:match("^%s*(%S+)%s+(%S+)%s*$")
     local target = targets[name]
-    if not target or (mode ~= "on" and mode ~= "off") then
+    if (not target and name ~= "all") or (mode ~= "on" and mode ~= "off") then
         Print("Invalid command. For usage and available parameters, type /hideme help")
+        return
+    end
+
+    if name == "all" then
+        -- Save every mode before applying frames so hooks see consistent settings.
+        for _, entry in pairs(targets) do
+            HideMeDB[entry.setting] = mode == "on"
+        end
+        ApplyTargets()
+        local pending = false
+        for _, entry in pairs(targets) do
+            pending = pending or entry.pending
+        end
+        local message = "All supported hiding settings are set to " .. mode .. "."
+        if InCombatLockdown() then
+            message = message .. " Changes will take effect after combat."
+        elseif pending then
+            message = message .. " Unloaded UI elements will be updated when available."
+        end
+        Print(message)
         return
     end
 

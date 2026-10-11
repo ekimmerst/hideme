@@ -16,8 +16,8 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 11, 2026: version 0.12.0; interface version 16001.
-- Last verified commit: 7319933 (Add calendar icon visibility command).
+- As of October 11, 2026: version 0.13.0; interface version 16001.
+- Last verified commit: 2c03f56 (Add addon compartment icon visibility command).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
 
@@ -32,6 +32,8 @@
 
 Controlled exclusively through chat, without a settings interface.
 
+- /hideme all on: set all supported hiding settings to on.
+- /hideme all off: set all supported hiding settings to off.
 - /hideme addons-icon on: hide the minimap addon compartment button.
 - /hideme addons-icon off: show the minimap addon compartment button.
 - /hideme bag-bar on: hide the bag bar.
@@ -67,6 +69,7 @@ it does not measure actual visibility when other addons interfere.
 ## Technical implementation
 
 - targets defines the setting key, label, and frames for each parameter.
+- all is a bulk slash command, not a target or saved setting. Validates on/off first, writes all targets' settings before invoking ApplyTargets once, and reports combat or missing-frame pending changes. Includes future targets automatically. Individual commands remain usable afterward. Preserves target-specific off behavior and permanent Combat Log hiding.
 - addons-icon: HideMeDB.hideAddonsIcon; AddonCompartmentFrame. Uses generic Show/Hide, Show enforcement, per-character persistence, missing-frame retry and combat deferral. Does not disable addons or remove their menu registrations.
 - calendar-icon: HideMeDB.hideCalendarIcon; GameTimeFrame. Uses the generic Show/Hide implementation, Show enforcement, per-character persistence, missing-frame retry and combat deferral. Hiding the parent also hides calendar invitation textures; the calendar feature remains available through other entry points.
 - Version 0.10.1 renames the mistaken char-bar command to chat-bar everywhere, retaining HideMeDB.hideChatInput. No old-command alias is exposed. HideCombatLog always gates ChatFrame2, ChatFrame2Tab, ChatFrame2EditBox, ChatFrame2ButtonFrame and CombatLogQuickButtonFrame_Custom independently of settings. Show and guarded SetAlpha hooks enforce zero opacity during combat; direct hiding and hook installation wait until outside combat. Selected Combat Log returns to General via FCF_SelectDockFrame when available. Events, application and new-window hooks retry discovery. Combat-log messages and subscriptions are not cleared.
@@ -112,6 +115,8 @@ it does not measure actual visibility when other addons interfere.
 - Version 0.5.2 passed Lua 5.1 syntax and simulated target/combat transitions, enabling with an existing target, Show hooks, deferred on/off changes, invalid commands, other targets, missing-frame retry, and saved-setting reapplication. Resource API stubs raised errors if called; no health/mana reads occurred. git diff --check passed. The user subsequently confirmed player-frame hiding works in game.
 - The user confirmed UnitHealthPercent and C_CurveUtil.CreateCurve exist on the beta client. Version 0.5.3 implements the researched curve-to-alpha path. Lua 5.1 simulations passed for comparison-rejecting secret-result sentinels, health boundaries (including 99.999% and 100%), maximum-health changes, target/combat transitions, deferred modes, Show hooks, missing-frame retry, saved-setting reapplication and existing targets; raw resource APIs were forbidden by the harness. git diff --check passed. The user subsequently confirmed the health/alpha behavior works in game.
 - Do not report tests that were not run as passed.
+- Version 0.13.0 passed Lua 5.1 syntax and simulations for all ten settings, on/off visibility, individual overrides, invalid/missing/extra arguments, combat-deferred changes, missing-frame retry, saved-setting reapplication, General-only tabs and permanent Combat Log hiding. git diff --check passed. In-game verification remains pending.
+- Test all: on/off from mixed settings, individual overrides afterward, invalid/missing/extra arguments, status, combat deferral, missing-frame retry and /reload persistence. General-only tabs and permanent Combat Log hiding still apply with all off.
 - Version 0.12.0 passed Lua 5.1 syntax and simulations for addons-icon on/off, Show and independent SetShown enforcement (used by Blizzard's addon-count updates), combat deferral, invalid commands, saved settings, late-frame retry and calendar-icon independence. git diff --check passed. In-game verification remains pending.
 - Version 0.11.0 passed Lua 5.1 syntax and simulations for calendar-icon on/off, Show enforcement, combat-deferred modes, invalid commands, saved-setting reapplication, missing-frame retry and independence from Minimap, CalendarFrame and existing targets. git diff --check passed. In-game verification remains pending.
 - Version 0.10.0 passed Lua 5.1 syntax and simulations for Show-before-focus activation, preserved active typing during mode changes, focus-loss hiding, off restoration after Hide without keyboard capture, new/temporary inputs, hook deduplication, chat updates, combat deferral, invalid commands, saved-setting reapplication, editBox fallback and chat-tab independence. git diff --check passed. In-game verification remains pending.
