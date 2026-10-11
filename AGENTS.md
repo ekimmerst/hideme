@@ -1,108 +1,108 @@
-﻿# HideMe – Projektwissen und Arbeitsregeln
+# HideMe – Project knowledge and working rules
 
-## Einstieg in zukünftige Sitzungen
+## Starting future sessions
 
-- Lies zuerst AGENTS.md, README.md, HideMe.toc und HideMe.lua.
-- Prüfe Git-Status, Remotes und letzte Commits vor Änderungen.
-- Aktueller Code und Git-Stand haben Vorrang vor veralteten Angaben hier.
-- Kommuniziere auf Deutsch; Chatmeldungen und Dokumentation sind ebenfalls deutsch.
-- Bearbeite HideMe. Andere Addons im übergeordneten Verzeichnis sind eigenständige Projekte.
-- Halte diese Datei bei relevanten Änderungen aktuell.
+- Read AGENTS.md, README.md, HideMe.toc, and HideMe.lua first.
+- Check Git status, remotes, and recent commits before making changes.
+- Current code and Git state take precedence over outdated information here.
+- Communicate with the user in German. All addon messages, comments, metadata, and project documentation must be in English, as requested by the user on October 11, 2026.
+- Work on HideMe. Other addons in the parent directory are separate projects.
+- Keep this file up to date when making relevant changes.
 
-## Projekt und Repository
+## Project and repository
 
-- Kleines Lua-Addon für die WoW-Forever-Beta.
-- Ordner: C:\Program Files (x86)\World of Warcraft\_classic_beta_\Interface\AddOns\HideMe
-- Öffentliches Repository: https://github.com/ekimmerst/hideme
+- Small Lua addon for the WoW Forever Beta.
+- Folder: C:\Program Files (x86)\World of Warcraft\_classic_beta_\Interface\AddOns\HideMe
+- Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
-- Branch: main, mit origin/main verknüpft.
-- Stand am 10. Oktober 2026: Version 0.4.0; Interface-Version 16001.
-- Letzter geprüfter Commit: 7c6c550 (Initial release of HideMe).
-- Veröffentlichung wurde vom Benutzer erfolgreich durchgeführt.
-- Keine externen Addon-Abhängigkeiten, kein Build-Schritt.
+- Branch: main, tracking origin/main.
+- As of October 11, 2026: version 0.5.3; interface version 16001.
+- Last verified commit: 452cebd (Document project context and workflow in AGENTS.md).
+- The user successfully published the addon previously.
+- No external addon dependencies and no build step.
 
-## Dateien
+## Files
 
-- HideMe.toc: Metadaten, Version, Interface-Version und Lua-Ladereihenfolge.
-- HideMe.lua: gesamte Implementierung.
-- README.md: Installation und Verwendung.
-- AGENTS.md: Informationen für zukünftige Arbeit.
+- HideMe.toc: metadata, version, interface version, and Lua load order.
+- HideMe.lua: entire implementation.
+- README.md: installation and usage.
+- AGENTS.md: information for future work.
 
-## Befehle
+## Commands
 
-Steuerung ausschließlich per Chat, ohne Einstellungsoberfläche.
+Controlled exclusively through chat, without a settings interface.
 
-- /hideme bag-bar on: Taschenleiste ausblenden.
-- /hideme bag-bar off: Taschenleiste einblenden.
-- /hideme micro-menu on: Micro-Menü ausblenden.
-- /hideme micro-menu off: Micro-Menü einblenden.
-- /hideme help: alle Befehle und Verwendung anzeigen.
-- /hideme ohne Parameter: Hilfe anzeigen.
-- /hideme status: Einstellungen aller Ausblendungen anzeigen.
+- /hideme bag-bar on: hide the bag bar.
+- /hideme bag-bar off: show the bag bar.
+- /hideme micro-menu on: hide the micro menu.
+- /hideme micro-menu off: show the micro menu.
+- /hideme player-frame on: show the player frame with a target, in combat, or below full health.
+- /hideme player-frame off: always show the player frame.
+- /hideme help: show all commands and usage.
+- /hideme without parameters: show help.
+- /hideme status: show all hiding settings.
 
-on aktiviert die Ausblendung; off deaktiviert sie.
-Groß-/Kleinschreibung wird ignoriert; äußere Leerzeichen werden entfernt.
-Ungültige Befehle verändern keine Einstellungen und verweisen auf die Hilfe.
+on enables hiding; off disables it.
+Commands are case-insensitive; leading and trailing whitespace is removed.
+Invalid commands do not change settings and refer the user to help.
 
-Status listet alle Ziele alphabetisch mit Parametername, deutscher
-Bezeichnung und gespeichertem on/off. Ausstehende Änderungen werden
-gekennzeichnet. Status zeigt Einstellungen und misst nicht die tatsächliche
-Sichtbarkeit bei Eingriffen anderer Addons.
+Status lists all targets alphabetically with the parameter name, English label,
+and saved on/off state. Pending changes are marked. Status displays settings;
+it does not measure actual visibility when other addons interfere.
 
-## Technische Umsetzung
+## Technical implementation
 
-- targets definiert je Parameter Einstellungsschlüssel, Bezeichnung und Frames.
-- bag-bar: HideMeDB.hideBagBar; Frame BagsBar.
-- micro-menu: HideMeDB.hideMicroMenu; Frames MicroMenuContainer und MicroMenu,
-  sofern vorhanden.
-- HideMeDB wird über SavedVariablesPerCharacter pro Charakter gespeichert.
-- Einstellungen bleiben nach /reload und Spielneustarts erhalten.
-- Gespeicherte Werte werden auf boolesche Werte normalisiert.
-- Standardmäßig ist die Ausblendung deaktiviert.
-- ApplyTarget wendet die Sichtbarkeit an.
-- ApplyTargets verarbeitet alle oder nur ausstehende Ziele.
-- InCombatLockdown verhindert Show/Hide und Hook-Einrichtung im Kampf.
-- target.pending merkt ausstehende Änderungen.
-- PLAYER_REGEN_ENABLED wendet Änderungen nach Kampfende an.
-- Fehlende Frames führen zu ausstehenden Änderungen; spätere
-  ADDON_LOADED-Ereignisse versuchen die Anwendung erneut.
-- PLAYER_LOGIN und PLAYER_ENTERING_WORLD wenden alle Einstellungen an.
-- hooksecurefunc auf Show blendet Frames bei aktiver Ausblendung erneut aus.
-- hookedFrames verhindert doppelte Hooks.
-- Hooks prüfen die aktuelle Einstellung, sodass off weiterhin funktioniert.
-- Andere Addons können dieselben Frames beeinflussen.
+- targets defines the setting key, label, and frames for each parameter.
+- bag-bar: HideMeDB.hideBagBar; frame BagsBar.
+- micro-menu: HideMeDB.hideMicroMenu; frames MicroMenuContainer and MicroMenu, if available.
+- HideMeDB is saved per character through SavedVariablesPerCharacter.
+- player-frame: HideMeDB.hidePlayerFrame; frame PlayerFrame. With curve support, the frame stays shown and health controls alpha via UnitHealthPercent("player", false, healthAlphaCurve). A Step curve maps fraction 0 to alpha 1 and fraction 1 to alpha 0. The result is passed directly to SetAlpha, never compared or inspected. Mana is not queried. Transparent frames may remain interactive.
+- Version 0.5.0 failed in game with a secret-number comparison in PlayerNeedsFrame. Version 0.5.1 guarded secret values but kept the frame always visible on the user's client. The user approved removing health/mana conditions temporarily for version 0.5.2; do not restore them without discussing the client restrictions.
+- RegisterStateDriver keeps the player frame shown with curve support. Clients without the required APIs retain the version 0.5.2 target/combat visibility driver. Registration and direct Show/Hide calls occur only outside combat.
+- PLAYER_TARGET_CHANGED, PLAYER_REGEN_DISABLED, UNIT_HEALTH and UNIT_MAXHEALTH update player alpha; PLAYER_REGEN_ENABLED applies pending settings and reevaluates. target.appliedHiding preserves the applied mode until deferred combat changes can be applied. Target/combat/off set alpha to 1.
+- Settings persist across /reload and game restarts.
+- Saved values are normalized to booleans.
+- Hiding is disabled by default.
+- ApplyTarget applies visibility.
+- ApplyTargets processes all targets or only pending targets.
+- InCombatLockdown prevents Show/Hide calls and hook setup during combat.
+- target.pending tracks pending changes.
+- PLAYER_REGEN_ENABLED applies changes after combat ends.
+- Missing frames result in pending changes; later ADDON_LOADED events retry application.
+- PLAYER_LOGIN and PLAYER_ENTERING_WORLD apply all settings.
+- A hooksecurefunc hook on Show hides frames again when hiding is enabled.
+- hookedFrames prevents duplicate hooks.
+- Hooks check the current setting so that off continues to work.
+- Other addons can affect the same frames.
 
-## Änderungen und Prüfung
+## Changes and verification
 
-- Neue Ziele in targets, Hilfe und README ergänzen.
-- Status nutzt targets automatisch.
-- Bestehende Einstellungsschlüssel und die Bedeutung von on/off erhalten.
-- Bei funktionalen Releases Version in HideMe.toc und README aktualisieren.
-- Interface-Version nur bei belegtem Bedarf ändern.
-- Ein bestätigter Funktionstest im Spiel steht bisher aus.
-- Lua, LuaJIT und luac waren in der bisherigen Agent-Umgebung nicht verfügbar.
-- Keine nicht ausgeführten Tests als bestanden melden.
-- Im Spiel prüfen: beide Ziele unabhängig mit on/off, Hilfe, Status,
-  ungültige Befehle, Speicherung nach /reload und Neustart sowie Änderungen
-  im Kampf und deren Anwendung nach Kampfende.
-- Prüfen, dass UI-Aktualisierungen ausgeblendete Elemente nicht dauerhaft
-  wieder einblenden und off sie wiederherstellt.
-- Neue Addons benötigen einen Spielneustart; Änderungen an bereits
-  geladenem HideMe können mit /reload geladen werden.
+- Add new targets to targets, help, and README.
+- Status uses targets automatically.
+- Preserve existing setting keys and the meaning of on/off.
+- Update the version in HideMe.toc and README for functional releases.
+- Change the interface version only when supported by evidence.
+- The user confirmed on October 11, 2026 that version 0.5.2 player-frame hiding and version 0.5.3 health-based visibility work in game. The full test matrix remains pending.
+- Lua, LuaJIT, and luac were unavailable in the previous agent environment.
+- Version 0.5.0 was checked for syntax and simulated WoW state changes using a temporary Lupa Lua 5.1 runtime (target, health/mana, combat, deferred mode changes, missing frames, and existing targets). This does not replace an in-game test.
+- Version 0.5.1 passed the existing Lua 5.1 state simulations and regression simulations using comparison-rejecting sentinel values for each of the four resource APIs, including Show hooks, events, on/off, recovery to readable values, target short-circuiting, and clients without issecretvalue. Actual WoW secret values cannot be reproduced by Lupa; in-game verification remains required.
+- Version 0.5.2 passed Lua 5.1 syntax and simulated target/combat transitions, enabling with an existing target, Show hooks, deferred on/off changes, invalid commands, other targets, missing-frame retry, and saved-setting reapplication. Resource API stubs raised errors if called; no health/mana reads occurred. git diff --check passed. The user subsequently confirmed player-frame hiding works in game.
+- The user confirmed UnitHealthPercent and C_CurveUtil.CreateCurve exist on the beta client. Version 0.5.3 implements the researched curve-to-alpha path. Lua 5.1 simulations passed for comparison-rejecting secret-result sentinels, health boundaries (including 99.999% and 100%), maximum-health changes, target/combat transitions, deferred modes, Show hooks, missing-frame retry, saved-setting reapplication and existing targets; raw resource APIs were forbidden by the harness. git diff --check passed. The user subsequently confirmed the health/alpha behavior works in game.
+- Do not report tests that were not run as passed.
+- Test in game: all three targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Also test the player frame: select/clear a target, enter/leave combat (including clearing a target during combat), enable with a target already selected, change modes during combat, lose health and regenerate to exactly full health. Mana changes must not affect visibility. Verify transparent-frame mouse behavior and off restoring alpha to 1.
+- Verify that UI updates do not permanently reveal hidden elements and that off restores them.
+- New addons require a game restart; changes to an already loaded HideMe can be loaded with /reload.
 
-## GitHub und Ausführungsumgebung
+## GitHub and execution environment
 
-- Git und GitHub CLI sind installiert.
-- Der Benutzer hat Anmeldung und Git-Identität in seiner Windows-Sitzung eingerichtet.
-- Die bisherige Agent-Umgebung lief als CodexSandboxOffline und konnte
-  gespeicherte Zugangsdaten und globale Git-Identität nicht nutzen.
-- Eine dortige Meldung über ein ungültiges Token kann durch die getrennten
-  Benutzerkontexte entstehen; Benutzeranmeldung nicht vorschnell zurücksetzen.
-- Rechte und Anmeldung in zukünftigen Sitzungen erneut prüfen.
-- Keine Zugangsdaten in Projektdateien oder Ausgaben speichern.
-- Keine Commit-Identität erfinden.
-- Commit und Push richten sich nach dem aktuellen Benutzerauftrag.
-  Die frühere Veröffentlichung autorisiert keine automatischen zukünftigen Pushes.
-- Bei fehlendem Zugriff lokale Arbeit fertigstellen und konkrete
-  PowerShell-Befehle für die normale Benutzersitzung nennen.
-- Fremde Änderungen erhalten; keine destruktiven Git-Befehle ohne Autorisierung.
+- Git and GitHub CLI are installed.
+- The user configured authentication and Git identity in their Windows session.
+- The previous agent environment ran as CodexSandboxOffline and could not use saved credentials or the global Git identity.
+- An invalid-token message in that environment may be caused by separate user contexts; do not prematurely reset the user's authentication.
+- Recheck permissions and authentication in future sessions.
+- Do not store credentials in project files or outputs.
+- Do not invent a commit identity.
+- Commit and push according to the current user request. Previous publication does not authorize automatic future pushes.
+- If access is unavailable, finish local work and provide concrete PowerShell commands for the user's normal session.
+- Preserve unrelated changes; do not use destructive Git commands without authorization.

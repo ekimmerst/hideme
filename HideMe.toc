@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: HideMe
-## Notes: Blendet UI-Elemente per Chatbefehl aus und ein.
+## Notes: Hides and shows UI elements using chat commands.
 ## Author: HideMe
-## Version: 0.4.0
+## Version: 0.5.3
 ## SavedVariablesPerCharacter: HideMeDB
 
 HideMe.lua
