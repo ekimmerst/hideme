@@ -26,6 +26,16 @@ local targets = {
         frames = { "PlayerFrame" },
         conditional = true,
     },
+    ["toolbars"] = {
+        setting = "hideToolbars",
+        label = "Toolbars",
+        frames = {
+            "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight",
+            "MultiBarRight", "MultiBarLeft", "MultiBar5", "MultiBar6", "MultiBar7",
+            "PetActionBar", "StanceBar", "PossessActionBar", "OverrideActionBar",
+        },
+        toolbars = true,
+    },
 }
 
 local function Print(message)
@@ -40,6 +50,8 @@ local function PrintHelp()
     Print("/hideme micro-menu off - Show the micro menu.")
     Print("/hideme player-frame on - Show with a target, in combat, or below full health.")
     Print("/hideme player-frame off - Always show the player frame.")
+    Print("/hideme toolbars on - Show active action bars only with a target or in combat.")
+    Print("/hideme toolbars off - Always show active action bars.")
     Print("/hideme status - Show saved settings for all supported elements.")
     Print("/hideme help - Show this help.")
 end
@@ -86,7 +98,39 @@ local function UpdatePlayerAlpha(frame, target)
     end
 end
 
+local function UpdateToolbarAlpha(frame, target)
+    local hidden = target.appliedHiding and not PlayerNeedsFrame()
+    frame:SetAlpha(hidden and 0 or 1)
+end
+
+local function ApplyToolbars(target)
+    local combat = InCombatLockdown()
+    if not combat then
+        target.appliedHiding = HideMeDB[target.setting]
+    end
+    local found = false
+    for _, frameName in ipairs(target.frames) do
+        local frame = _G[frameName]
+        if frame then
+            found = true
+            -- Preserve Blizzard's activation, paging and special-bar visibility.
+            UpdateToolbarAlpha(frame, target)
+            if not hookedFrames[frame] and not combat then
+                hooksecurefunc(frame, "Show", function(self)
+                    UpdateToolbarAlpha(self, target)
+                end)
+                hookedFrames[frame] = true
+            end
+        end
+    end
+    target.pending = combat or not found
+    return found
+end
+
 local function ApplyTarget(target)
+    if target.toolbars then
+        return ApplyToolbars(target)
+    end
     if InCombatLockdown() then
         if target.conditional and _G.PlayerFrame then
             UpdatePlayerAlpha(_G.PlayerFrame, target)
@@ -165,12 +209,17 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
             end
         else
             ApplyTargets(true)
+            -- Optional action bars may be loaded after the main UI.
+            if HideMeDB then ApplyTarget(targets["toolbars"]) end
         end
     elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED"
         or event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
         if HideMeDB and (event ~= "UNIT_HEALTH" and event ~= "UNIT_MAXHEALTH"
             or loadedAddon == "player") then
             ApplyTarget(targets["player-frame"])
+            if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED" then
+                ApplyTarget(targets["toolbars"])
+            end
         end
     else
         ApplyTargets(event == "PLAYER_REGEN_ENABLED")
@@ -208,6 +257,10 @@ SlashCmdList.HIDEME = function(message)
             and (healthAlphaCurve and "shown with a target, in combat, or below full health."
                 or "shown only with a target or in combat (health API unavailable).")
             or "always shown."
+    elseif target.toolbars then
+        action = HideMeDB[target.setting]
+            and "shown only with a target or in combat."
+            or "always shown when active."
     end
     if InCombatLockdown() then
         Print(target.label .. " will be " .. action .. " The change will take effect after combat.")

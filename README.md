@@ -23,6 +23,8 @@ Enter all commands in the WoW chat.
 | `/hideme micro-menu off` | Show the micro menu |
 | `/hideme player-frame on` | Show the player frame with a target, in combat, or below full health |
 | `/hideme player-frame off` | Always show the player frame |
+| `/hideme toolbars on` | Show active action bars only with a target or in combat |
+| `/hideme toolbars off` | Always show active action bars |
 | `/hideme status` | Show the saved settings for all supported elements |
 | `/hideme help` | Show available commands and their usage |
 | `/hideme` | Show help |
@@ -33,9 +35,11 @@ With `player-frame on`, the player frame becomes transparent at full health when
 
 Settings are saved **per character** and persist across restarts and `/reload`. Changes made during combat take effect after combat ends. The status display marks pending changes. It shows the settings saved by HideMe; other addons can also affect actual visibility.
 
+With `toolbars on`, the standard action bars become transparent without a target outside combat. With a target or in combat, they have full opacity. This covers the main action bar, seven additional action bars, and available pet, stance, possess and override bars. Blizzard continues to control which bars are enabled and appropriate for the current state; `off` restores full opacity without enabling disabled bars. Key bindings remain usable, and transparent bars can still receive mouse input. Bars supplied by other addons are not covered.
+
 ## Compatibility
 
-- Version: **0.5.3**
+- Version: **0.6.0**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
@@ -43,3 +47,4 @@ Settings are saved **per character** and persist across restarts and `/reload`. 
 If the required health/curve APIs are unavailable, HideMe falls back to showing the player frame only with a target or in combat.
 
 The user confirmed target/combat hiding in version 0.5.2 and health-based visibility in version 0.5.3 on the beta client. The full compatibility test matrix remains pending.
+The user confirmed the toolbars behavior in version 0.6.0 works on the beta client. The full compatibility test matrix remains pending.

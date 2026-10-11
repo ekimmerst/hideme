@@ -16,8 +16,8 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 11, 2026: version 0.5.3; interface version 16001.
-- Last verified commit: 452cebd (Document project context and workflow in AGENTS.md).
+- As of October 11, 2026: version 0.6.0; interface version 16001.
+- Last verified commit: a4f6394 (Add health-aware player frame visibility and English documentation).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
 
@@ -38,6 +38,8 @@ Controlled exclusively through chat, without a settings interface.
 - /hideme micro-menu off: show the micro menu.
 - /hideme player-frame on: show the player frame with a target, in combat, or below full health.
 - /hideme player-frame off: always show the player frame.
+- /hideme toolbars on: show active standard action bars only with a target or in combat.
+- /hideme toolbars off: always show active standard action bars.
 - /hideme help: show all commands and usage.
 - /hideme without parameters: show help.
 - /hideme status: show all hiding settings.
@@ -56,6 +58,8 @@ it does not measure actual visibility when other addons interfere.
 - bag-bar: HideMeDB.hideBagBar; frame BagsBar.
 - micro-menu: HideMeDB.hideMicroMenu; frames MicroMenuContainer and MicroMenu, if available.
 - HideMeDB is saved per character through SavedVariablesPerCharacter.
+- toolbars: HideMeDB.hideToolbars. MainActionBar, MultiBarBottomLeft, MultiBarBottomRight, MultiBarRight, MultiBarLeft, MultiBar5/6/7, PetActionBar, StanceBar, PossessActionBar and OverrideActionBar, when available. ApplyToolbars changes alpha only, preserving Blizzard's activation/paging/special-state visibility; it never calls Show/Hide or replaces their state drivers. Transparent bars retain key bindings and may receive mouse input. Third-party bars are not covered.
+- Toolbar alpha updates on target and combat changes; Show hooks restore the current alpha. Hook setup and applied-mode changes wait until out of combat, while alpha can update in combat. Later ADDON_LOADED events retry optional toolbar discovery. Inactive bars remain inactive with off.
 - player-frame: HideMeDB.hidePlayerFrame; frame PlayerFrame. With curve support, the frame stays shown and health controls alpha via UnitHealthPercent("player", false, healthAlphaCurve). A Step curve maps fraction 0 to alpha 1 and fraction 1 to alpha 0. The result is passed directly to SetAlpha, never compared or inspected. Mana is not queried. Transparent frames may remain interactive.
 - Version 0.5.0 failed in game with a secret-number comparison in PlayerNeedsFrame. Version 0.5.1 guarded secret values but kept the frame always visible on the user's client. The user approved removing health/mana conditions temporarily for version 0.5.2; do not restore them without discussing the client restrictions.
 - RegisterStateDriver keeps the player frame shown with curve support. Clients without the required APIs retain the version 0.5.2 target/combat visibility driver. Registration and direct Show/Hide calls occur only outside combat.
@@ -89,7 +93,9 @@ it does not measure actual visibility when other addons interfere.
 - Version 0.5.2 passed Lua 5.1 syntax and simulated target/combat transitions, enabling with an existing target, Show hooks, deferred on/off changes, invalid commands, other targets, missing-frame retry, and saved-setting reapplication. Resource API stubs raised errors if called; no health/mana reads occurred. git diff --check passed. The user subsequently confirmed player-frame hiding works in game.
 - The user confirmed UnitHealthPercent and C_CurveUtil.CreateCurve exist on the beta client. Version 0.5.3 implements the researched curve-to-alpha path. Lua 5.1 simulations passed for comparison-rejecting secret-result sentinels, health boundaries (including 99.999% and 100%), maximum-health changes, target/combat transitions, deferred modes, Show hooks, missing-frame retry, saved-setting reapplication and existing targets; raw resource APIs were forbidden by the harness. git diff --check passed. The user subsequently confirmed the health/alpha behavior works in game.
 - Do not report tests that were not run as passed.
-- Test in game: all three targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Version 0.6.0 passed Lua 5.1 syntax and toolbar simulations for target/combat transitions, deferred on/off, inactive bars staying inactive, late-loaded bars, Show hooks, invalid commands, saved-setting reapplication and independence from the existing targets. The harness also verified toolbar state drivers were untouched. The user confirmed on October 11, 2026 that toolbars works in game; the full compatibility test matrix remains pending.
+- Test in game: all four targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Test toolbars: target select/clear, combat enter/leave, deferred mode changes, enabling/disabling additional bars while hiding is enabled, pet/stance/possess/override states, key bindings, and independence from bag-bar, micro-menu and player-frame settings.
 - Also test the player frame: select/clear a target, enter/leave combat (including clearing a target during combat), enable with a target already selected, change modes during combat, lose health and regenerate to exactly full health. Mana changes must not affect visibility. Verify transparent-frame mouse behavior and off restoring alpha to 1.
 - Verify that UI updates do not permanently reveal hidden elements and that off restores them.
 - New addons require a game restart; changes to an already loaded HideMe can be loaded with /reload.
