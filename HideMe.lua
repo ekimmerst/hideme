@@ -1,6 +1,10 @@
 local addonName = ...
 local events = CreateFrame("Frame")
 local hookedFrames = {}
+local hookedChatFunctions = {}
+local combatLogFrames = {}
+local updatingCombatLogAlpha = {}
+local hidingCombatLog = false
 local updatingExperienceAlpha = {}
 local healthAlphaCurve
 if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
@@ -11,6 +15,24 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["chat-bar"] = {
+        setting = "hideChatInput",
+        label = "Chat input",
+        frames = {},
+        chatInput = true,
+    },
+    ["chat-tabs"] = {
+        setting = "hideChatTabs",
+        label = "Chat tabs",
+        frames = {},
+        chatTabs = true,
+    },
+    ["chat-buttons"] = {
+        setting = "hideChatButtons",
+        label = "Chat buttons",
+        frames = {},
+        chatButtons = true,
+    },
     ["exp-bar"] = {
         setting = "hideExpBar",
         label = "Status bars",
@@ -53,6 +75,12 @@ local function PrintHelp()
     Print("Available commands (on: enable hiding, off: disable hiding):")
     Print("/hideme bag-bar on - Hide the bag bar.")
     Print("/hideme bag-bar off - Show the bag bar.")
+    Print("/hideme chat-bar on - Show chat input only while typing (press Return to start).")
+    Print("/hideme chat-bar off - Always show the General chat input without taking focus.")
+    Print("/hideme chat-buttons on - Hide standard chat buttons in all chat windows.")
+    Print("/hideme chat-buttons off - Show standard chat buttons.")
+    Print("/hideme chat-tabs on - Hide all standard chat tabs.")
+    Print("/hideme chat-tabs off - Show only the General tab.")
     Print("/hideme exp-bar on - Show all status bars and borders for 2 seconds after XP changes.")
     Print("/hideme exp-bar off - Always show available status bars and borders.")
     Print("/hideme micro-menu on - Hide the micro menu.")
@@ -77,6 +105,9 @@ local function PrintStatus()
         local target = targets[name]
         local hidden = HideMeDB and HideMeDB[target.setting] == true
         local state = hidden and "on (hiding enabled)" or "off (hiding disabled)"
+        if target.chatTabs then
+            state = hidden and "on (all tabs hidden)" or "off (General tab only)"
+        end
         if target.pending then
             if InCombatLockdown() then
                 state = state .. " - Pending until combat ends"
@@ -92,7 +123,12 @@ local function PlayerNeedsFrame()
     return InCombatLockdown() or UnitExists("target")
 end
 
-local function ShouldHide(target)
+local function ShouldHide(target, frame)
+    if target.chatTabs then
+        -- Identify the default General window without relying on localized names.
+        local generalTab = _G.ChatFrame1Tab or (_G.ChatFrame1 and _G.ChatFrame1.tab)
+        return HideMeDB and (HideMeDB[target.setting] or frame ~= generalTab)
+    end
     return HideMeDB and HideMeDB[target.setting]
         and (not target.conditional or not PlayerNeedsFrame())
 end
@@ -189,7 +225,98 @@ local function ApplyExperience(target)
     return #frames > 0
 end
 
+local function GetTargetFrames(target)
+    local frames, seen = {}, {}
+    local function Add(frame)
+        if frame and not seen[frame] then
+            frames[#frames + 1] = frame
+            seen[frame] = true
+        end
+    end
+    for _, name in ipairs(target.frames) do Add(_G[name]) end
+    if target.chatButtons then
+        for _, name in ipairs({ "ChatFrameMenuButton", "ChatFrameChannelButton",
+            "QuickJoinToastButton", "ChatFrameToggleVoiceDeafenButton",
+            "ChatFrameToggleVoiceMuteButton" }) do
+            Add(_G[name])
+        end
+    end
+    if target.chatButtons or target.chatTabs or target.chatInput then
+        local names = {}
+        for i = 1, NUM_CHAT_WINDOWS or 10 do names[#names + 1] = "ChatFrame" .. i end
+        for _, name in ipairs(CHAT_FRAMES or {}) do names[#names + 1] = name end
+        for _, name in ipairs(names) do
+            if target.chatInput then
+                Add(_G[name .. "EditBox"])
+                local chat = _G[name]
+                if chat then Add(chat.editBox) end
+            elseif target.chatTabs then
+                Add(_G[name .. "Tab"])
+                local chat = _G[name]
+                if chat then Add(chat.tab) end
+            else
+                Add(_G[name .. "ButtonFrame"])
+                Add(_G[name .. "ScrollToBottomButton"])
+                Add(_G[name .. "MinimizeButton"])
+                local chat = _G[name]
+                if chat then
+                    Add(chat.buttonFrame)
+                    Add(chat.ScrollBar)
+                    Add(chat.ScrollToBottomButton)
+                end
+            end
+        end
+    end
+    return frames
+end
+
+local function ApplyChatInput(target)
+    if InCombatLockdown() then
+        target.pending = true
+        return
+    end
+    local frames = GetTargetFrames(target)
+    local primary = _G.ChatFrame1EditBox or (_G.ChatFrame1 and _G.ChatFrame1.editBox)
+    for _, frame in ipairs(frames) do
+        if not hookedFrames[frame] then
+            -- Never hide from a Show hook: Blizzard shows the box before focusing it.
+            frame:HookScript("OnEditFocusLost", function(self)
+                if not HideMeDB then return end
+                if InCombatLockdown() then
+                    target.pending = true
+                elseif HideMeDB[target.setting] then
+                    self:Hide()
+                end
+            end)
+            hooksecurefunc(frame, "Hide", function(self)
+                local general = _G.ChatFrame1EditBox or (_G.ChatFrame1 and _G.ChatFrame1.editBox)
+                if HideMeDB and not HideMeDB[target.setting] and self == general then
+                    if InCombatLockdown() then
+                        target.pending = true
+                    else
+                        -- Show does not activate chat or capture keyboard focus.
+                        self:Show()
+                    end
+                end
+            end)
+            hookedFrames[frame] = true
+        end
+        if not frame:HasFocus() then
+            if not HideMeDB[target.setting] and frame == primary then
+                frame:Show()
+            else
+                frame:Hide()
+            end
+        end
+    end
+    target.pending = #frames == 0
+    return #frames > 0
+end
+
 local function ApplyTarget(target)
+    if target.chatInput then
+        return ApplyChatInput(target)
+    end
     if target.experience then
         return ApplyExperience(target)
     end
@@ -205,15 +332,14 @@ local function ApplyTarget(target)
     end
 
     local found = false
-    for _, frameName in ipairs(target.frames) do
-        local frame = _G[frameName]
+    for _, frame in ipairs(GetTargetFrames(target)) do
         if frame then
             found = true
             if not hookedFrames[frame] then
                 hooksecurefunc(frame, "Show", function(self)
                     if target.conditional and healthAlphaCurve then
                         UpdatePlayerAlpha(self, target)
-                    elseif ShouldHide(target) then
+                    elseif ShouldHide(target, self) then
                         if InCombatLockdown() then
                             target.pending = true
                         else
@@ -235,7 +361,7 @@ local function ApplyTarget(target)
             if target.conditional and healthAlphaCurve then
                 UpdatePlayerAlpha(frame, target)
                 frame:Show()
-            elseif ShouldHide(target) then
+            elseif ShouldHide(target, frame) then
                 frame:Hide()
             else
                 frame:Show()
@@ -246,11 +372,64 @@ local function ApplyTarget(target)
     return found
 end
 
+local function HideCombatLog()
+    if hidingCombatLog then return end
+    hidingCombatLog = true
+    local log = _G.ChatFrame2
+    if log and not InCombatLockdown() and _G.ChatFrame1 then
+        if (SELECTED_CHAT_FRAME == log or SELECTED_DOCK_FRAME == log)
+            and type(FCF_SelectDockFrame) == "function" then
+            FCF_SelectDockFrame(_G.ChatFrame1)
+            if SELECTED_CHAT_FRAME == log then SELECTED_CHAT_FRAME = _G.ChatFrame1 end
+        end
+    end
+    local frames = {
+        log, _G.ChatFrame2Tab, _G.CombatLogQuickButtonFrame_Custom,
+        _G.ChatFrame2EditBox, _G.ChatFrame2ButtonFrame,
+    }
+    -- Explicit indices also handle optional frames missing in the middle.
+    for i = 1, 5 do
+        local frame = frames[i]
+        if frame then
+            updatingCombatLogAlpha[frame] = true
+            frame:SetAlpha(0)
+            updatingCombatLogAlpha[frame] = nil
+            if not InCombatLockdown() then
+                if not combatLogFrames[frame] then
+                    hooksecurefunc(frame, "Show", HideCombatLog)
+                    hooksecurefunc(frame, "SetAlpha", function(self)
+                        if not updatingCombatLogAlpha[self] then HideCombatLog() end
+                    end)
+                    combatLogFrames[frame] = true
+                end
+                frame:Hide()
+            end
+        end
+    end
+    hidingCombatLog = false
+end
+
 local function ApplyTargets(pendingOnly)
     if not HideMeDB then return end
     for _, target in pairs(targets) do
         if not pendingOnly or target.pending then
             ApplyTarget(target)
+        end
+    end
+    HideCombatLog()
+    if not InCombatLockdown() then
+        for _, name in ipairs({ "FCF_OpenNewWindow", "FCF_OpenTemporaryWindow" }) do
+            if type(_G[name]) == "function" and not hookedChatFunctions[name] then
+                hooksecurefunc(name, function()
+                    if HideMeDB then
+                        ApplyTarget(targets["chat-buttons"])
+                        ApplyTarget(targets["chat-tabs"])
+                        ApplyTarget(targets["chat-bar"])
+                        HideCombatLog()
+                    end
+                end)
+                hookedChatFunctions[name] = true
+            end
         end
     end
 end
@@ -265,7 +444,10 @@ events:RegisterEvent("UNIT_HEALTH")
 events:RegisterEvent("UNIT_MAXHEALTH")
 events:RegisterEvent("PLAYER_XP_UPDATE")
 events:RegisterEvent("PLAYER_LEVEL_UP")
+events:RegisterEvent("UPDATE_CHAT_WINDOWS")
+events:RegisterEvent("UPDATE_FLOATING_CHAT_WINDOWS")
 events:SetScript("OnEvent", function(_, event, loadedAddon)
+    HideCombatLog()
     if event == "PLAYER_XP_UPDATE" or event == "PLAYER_LEVEL_UP" then
         if not HideMeDB or (event == "PLAYER_XP_UPDATE" and loadedAddon ~= "player") then
             return
@@ -295,6 +477,16 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
             -- Optional action bars may be loaded after the main UI.
             if HideMeDB then ApplyTarget(targets["toolbars"]) end
             if HideMeDB then ApplyTarget(targets["exp-bar"]) end
+            if HideMeDB then ApplyTarget(targets["chat-buttons"]) end
+            if HideMeDB then ApplyTarget(targets["chat-tabs"]) end
+            if HideMeDB then ApplyTarget(targets["chat-bar"]) end
+        end
+    elseif event == "UPDATE_CHAT_WINDOWS" or event == "UPDATE_FLOATING_CHAT_WINDOWS" then
+        if HideMeDB then
+            ApplyTarget(targets["chat-buttons"])
+            ApplyTarget(targets["chat-tabs"])
+            ApplyTarget(targets["chat-bar"])
+            HideCombatLog()
         end
     elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED"
         or event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
@@ -335,12 +527,19 @@ SlashCmdList.HIDEME = function(message)
 
     HideMeDB[target.setting] = mode == "on"
     local found = ApplyTarget(target)
+    HideCombatLog()
     local action = HideMeDB[target.setting] and "hidden." or "shown."
     if target.conditional then
         action = HideMeDB[target.setting]
             and (healthAlphaCurve and "shown with a target, in combat, or below full health."
                 or "shown only with a target or in combat (health API unavailable).")
             or "always shown."
+    elseif target.chatInput then
+        action = HideMeDB[target.setting]
+            and "shown only while typing (press Return to start)."
+            or "always shown for the General window without taking focus."
+    elseif target.chatTabs then
+        action = HideMeDB[target.setting] and "all hidden." or "shown only for the General window."
     elseif target.toolbars then
         action = HideMeDB[target.setting]
             and "shown only with a target or in combat."
