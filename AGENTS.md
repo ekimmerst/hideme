@@ -16,8 +16,8 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 11, 2026: version 0.11.0; interface version 16001.
-- Last verified commit: 2c53cb8 (Add chat controls and permanently hide the combat log).
+- As of October 11, 2026: version 0.12.0; interface version 16001.
+- Last verified commit: 7319933 (Add calendar icon visibility command).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
 
@@ -32,6 +32,8 @@
 
 Controlled exclusively through chat, without a settings interface.
 
+- /hideme addons-icon on: hide the minimap addon compartment button.
+- /hideme addons-icon off: show the minimap addon compartment button.
 - /hideme bag-bar on: hide the bag bar.
 - /hideme bag-bar off: show the bag bar.
 - /hideme calendar-icon on: hide the minimap calendar button.
@@ -65,6 +67,7 @@ it does not measure actual visibility when other addons interfere.
 ## Technical implementation
 
 - targets defines the setting key, label, and frames for each parameter.
+- addons-icon: HideMeDB.hideAddonsIcon; AddonCompartmentFrame. Uses generic Show/Hide, Show enforcement, per-character persistence, missing-frame retry and combat deferral. Does not disable addons or remove their menu registrations.
 - calendar-icon: HideMeDB.hideCalendarIcon; GameTimeFrame. Uses the generic Show/Hide implementation, Show enforcement, per-character persistence, missing-frame retry and combat deferral. Hiding the parent also hides calendar invitation textures; the calendar feature remains available through other entry points.
 - Version 0.10.1 renames the mistaken char-bar command to chat-bar everywhere, retaining HideMeDB.hideChatInput. No old-command alias is exposed. HideCombatLog always gates ChatFrame2, ChatFrame2Tab, ChatFrame2EditBox, ChatFrame2ButtonFrame and CombatLogQuickButtonFrame_Custom independently of settings. Show and guarded SetAlpha hooks enforce zero opacity during combat; direct hiding and hook installation wait until outside combat. Selected Combat Log returns to General via FCF_SelectDockFrame when available. Events, application and new-window hooks retry discovery. Combat-log messages and subscriptions are not cleared.
 - chat-bar: HideMeDB.hideChatInput. GetTargetFrames discovers ChatFrameNEditBox and chat.editBox using standard/temporary chat discovery. ApplyChatInput preserves focused fields; on hides inactive inputs and hides them on focus loss. Off shows only the primary General input when idle and restores it through a Hide hook. No Show hook hides inputs, because Blizzard shows them before setting focus. Never calls SetFocus or replaces input scripts; HookScript preserves existing handlers. Combat changes and hook installation are deferred. New-window hooks and chat/addon events include this target.
@@ -109,6 +112,7 @@ it does not measure actual visibility when other addons interfere.
 - Version 0.5.2 passed Lua 5.1 syntax and simulated target/combat transitions, enabling with an existing target, Show hooks, deferred on/off changes, invalid commands, other targets, missing-frame retry, and saved-setting reapplication. Resource API stubs raised errors if called; no health/mana reads occurred. git diff --check passed. The user subsequently confirmed player-frame hiding works in game.
 - The user confirmed UnitHealthPercent and C_CurveUtil.CreateCurve exist on the beta client. Version 0.5.3 implements the researched curve-to-alpha path. Lua 5.1 simulations passed for comparison-rejecting secret-result sentinels, health boundaries (including 99.999% and 100%), maximum-health changes, target/combat transitions, deferred modes, Show hooks, missing-frame retry, saved-setting reapplication and existing targets; raw resource APIs were forbidden by the harness. git diff --check passed. The user subsequently confirmed the health/alpha behavior works in game.
 - Do not report tests that were not run as passed.
+- Version 0.12.0 passed Lua 5.1 syntax and simulations for addons-icon on/off, Show and independent SetShown enforcement (used by Blizzard's addon-count updates), combat deferral, invalid commands, saved settings, late-frame retry and calendar-icon independence. git diff --check passed. In-game verification remains pending.
 - Version 0.11.0 passed Lua 5.1 syntax and simulations for calendar-icon on/off, Show enforcement, combat-deferred modes, invalid commands, saved-setting reapplication, missing-frame retry and independence from Minimap, CalendarFrame and existing targets. git diff --check passed. In-game verification remains pending.
 - Version 0.10.0 passed Lua 5.1 syntax and simulations for Show-before-focus activation, preserved active typing during mode changes, focus-loss hiding, off restoration after Hide without keyboard capture, new/temporary inputs, hook deduplication, chat updates, combat deferral, invalid commands, saved-setting reapplication, editBox fallback and chat-tab independence. git diff --check passed. In-game verification remains pending.
 - Version 0.10.1 passed Lua 5.1 syntax and simulations for renamed commands, retained setting, chat input activation/focus loss, permanent Combat Log hiding, Show/SetAlpha enforcement, General selection fallback, late frame loading, reload reapplication and combat alpha enforcement. git diff --check passed. Native rendering still requires in-game verification.
@@ -121,7 +125,8 @@ it does not measure actual visibility when other addons interfere.
 - The user confirmed version 0.9.1 General-only chat tabs work in game.
 - Test chat-bar: Return opens input, typing and slash commands remain usable, Return sends and Escape cancels, on hides idle fields, off keeps General input visible without keyboard capture, other/new/temporary windows, combat deferral and /reload persistence.
 - Test calendar-icon: on/off, invitation indicators, UI refreshes, combat-deferred changes, /reload persistence and independence from other minimap elements. Version 0.11.0 requires in-game verification.
-- Test in game: all nine targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
+- Test addons-icon: on/off, addon registration/UI refreshes, combat-deferred changes, /reload persistence and independence from calendar-icon. Version 0.12.0 requires in-game verification.
+- Test in game: all ten targets independently with on/off, help, status, invalid commands, persistence across /reload and restarts, and changes during combat applied after combat ends.
 - Test chat-tabs: on hides all tabs; off shows only General while Combat Log, Voice, unused and new/temporary tabs stay hidden. Also test docked/undocked windows, hover/chat updates, combat-deferred changes, persistence and independence from chat-buttons. Version 0.9.1 awaits in-game confirmation.
 - Test chat-buttons: all available menu/channel/social/voice/scroll/minimize controls, multiple docked and undocked windows, new and temporary chat windows, combat-deferred changes, UI refreshes, off restoration, and continued text entry/tab selection/mouse-wheel scrolling. The user confirmed basic functionality in version 0.8.0; the full matrix remains pending.
 - Test exp-bar: complete border/content disappearance including reputation and other status bars, XP gain, repeated gains inside two seconds, level-up/reset, expiry during combat, off while a pulse is active, on/off during combat, /reload, late loading, maximum level, and independence from toolbar settings. Non-XP updates must not reveal the area. Version 0.7.1 awaits in-game confirmation.

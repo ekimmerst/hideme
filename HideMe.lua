@@ -15,6 +15,12 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["addons-icon"] = {
+        setting = "hideAddonsIcon",
+        label = "Addons icon",
+        frames = { "AddonCompartmentFrame" },
+        enforceSetShown = true,
+    },
     ["calendar-icon"] = {
         setting = "hideCalendarIcon",
         label = "Calendar icon",
@@ -78,6 +84,8 @@ end
 
 local function PrintHelp()
     Print("Available commands (on: enable hiding, off: disable hiding):")
+    Print("/hideme addons-icon on - Hide the minimap addon compartment icon.")
+    Print("/hideme addons-icon off - Show the minimap addon compartment icon.")
     Print("/hideme bag-bar on - Hide the bag bar.")
     Print("/hideme bag-bar off - Show the bag bar.")
     Print("/hideme calendar-icon on - Hide the minimap calendar icon.")
@@ -354,6 +362,17 @@ local function ApplyTarget(target)
                         end
                     end
                 end)
+                if target.enforceSetShown then
+                    hooksecurefunc(frame, "SetShown", function(self)
+                        if ShouldHide(target, self) then
+                            if InCombatLockdown() then
+                                target.pending = true
+                            else
+                                self:Hide()
+                            end
+                        end
+                    end)
+                end
                 hookedFrames[frame] = true
             end
 

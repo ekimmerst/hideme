@@ -17,6 +17,8 @@ Enter all commands in the WoW chat.
 
 | Command | Function |
 | --- | --- |
+| `/hideme addons-icon on` | Hide the minimap addon compartment icon |
+| `/hideme addons-icon off` | Show the minimap addon compartment icon |
 | `/hideme bag-bar on` | Hide the bag bar |
 | `/hideme bag-bar off` | Show the bag bar |
 | `/hideme calendar-icon on` | Hide the minimap calendar icon |
@@ -41,6 +43,8 @@ Enter all commands in the WoW chat.
 
 **on enables hiding**, **off disables hiding**.
 
+With `addons-icon on`, the minimap addon compartment button (`AddonCompartmentFrame`) is hidden. `off` shows it again. This only changes the button's visibility; addons remain enabled. Uses per-character saved settings, Show enforcement, missing-frame retry and combat-deferred changes like `calendar-icon`.
+
 With `calendar-icon on`, the minimap calendar button (`GameTimeFrame`) is hidden, including its child textures and invitation indicators. UI attempts to show the button are suppressed outside combat; pending changes are applied when combat ends. `off` shows the button again. The setting is saved per character and does not disable the calendar itself.
 
 The Combat Log window (`ChatFrame2`), its tab, input, button panel and quick-filter controls are always hidden, independently of these settings. If selected, the dock returns to General outside combat. Show and alpha updates cannot reveal the log; combat uses zero opacity until direct hiding is safe. Combat messages are not deleted and combat-log collection is unchanged. The input parameter is `chat-bar` (corrected from the earlier typo `char-bar`); its saved setting is preserved.
@@ -61,7 +65,7 @@ With `exp-bar on`, the entire status-bar area becomes transparent, including its
 
 ## Compatibility
 
-- Version: **0.11.0**
+- Version: **0.12.0**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
