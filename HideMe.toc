@@ -2,7 +2,7 @@
 ## Title: HideMe
 ## Notes: Hides and shows UI elements using chat commands.
 ## Author: HideMe
-## Version: 0.10.1
+## Version: 0.11.0
 ## SavedVariablesPerCharacter: HideMeDB
 
 HideMe.lua

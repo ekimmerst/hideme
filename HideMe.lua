@@ -15,6 +15,11 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["calendar-icon"] = {
+        setting = "hideCalendarIcon",
+        label = "Calendar icon",
+        frames = { "GameTimeFrame" },
+    },
     ["chat-bar"] = {
         setting = "hideChatInput",
         label = "Chat input",
@@ -75,6 +80,8 @@ local function PrintHelp()
     Print("Available commands (on: enable hiding, off: disable hiding):")
     Print("/hideme bag-bar on - Hide the bag bar.")
     Print("/hideme bag-bar off - Show the bag bar.")
+    Print("/hideme calendar-icon on - Hide the minimap calendar icon.")
+    Print("/hideme calendar-icon off - Show the minimap calendar icon.")
     Print("/hideme chat-bar on - Show chat input only while typing (press Return to start).")
     Print("/hideme chat-bar off - Always show the General chat input without taking focus.")
     Print("/hideme chat-buttons on - Hide standard chat buttons in all chat windows.")

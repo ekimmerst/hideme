@@ -19,6 +19,8 @@ Enter all commands in the WoW chat.
 | --- | --- |
 | `/hideme bag-bar on` | Hide the bag bar |
 | `/hideme bag-bar off` | Show the bag bar |
+| `/hideme calendar-icon on` | Hide the minimap calendar icon |
+| `/hideme calendar-icon off` | Show the minimap calendar icon |
 | `/hideme chat-bar on` | Show chat input only while typing; press Return to start |
 | `/hideme chat-bar off` | Always show the General chat input without taking keyboard focus |
 | `/hideme chat-buttons on` | Hide standard chat buttons in all chat windows |
@@ -39,6 +41,8 @@ Enter all commands in the WoW chat.
 
 **on enables hiding**, **off disables hiding**.
 
+With `calendar-icon on`, the minimap calendar button (`GameTimeFrame`) is hidden, including its child textures and invitation indicators. UI attempts to show the button are suppressed outside combat; pending changes are applied when combat ends. `off` shows the button again. The setting is saved per character and does not disable the calendar itself.
+
 The Combat Log window (`ChatFrame2`), its tab, input, button panel and quick-filter controls are always hidden, independently of these settings. If selected, the dock returns to General outside combat. Show and alpha updates cannot reveal the log; combat uses zero opacity until direct hiding is safe. Combat messages are not deleted and combat-log collection is unchanged. The input parameter is `chat-bar` (corrected from the earlier typo `char-bar`); its saved setting is preserved.
 
 With `chat-bar on`, inactive chat input fields are hidden. Press Return to start typing as usual; sending a message or cancelling input hides the field again. With `off`, the General window's input field stays visible without automatically activating chat or taking keyboard focus. Other chat windows show their input while used, avoiding unused input fields. The setting also covers newly opened and temporary chat windows and is independent of chat buttons and tabs. Changes during combat wait until combat ends.
@@ -57,7 +61,7 @@ With `exp-bar on`, the entire status-bar area becomes transparent, including its
 
 ## Compatibility
 
-- Version: **0.10.1**
+- Version: **0.11.0**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
