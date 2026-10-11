@@ -98,7 +98,7 @@ local function PrintHelp()
     Print("/hideme chat-buttons off - Show standard chat buttons.")
     Print("/hideme chat-tabs on - Hide all standard chat tabs.")
     Print("/hideme chat-tabs off - Show only the General tab.")
-    Print("/hideme exp-bar on - Show all status bars and borders for 2 seconds after XP changes.")
+    Print("/hideme exp-bar on - Hide all status bars and borders permanently.")
     Print("/hideme exp-bar off - Always show available status bars and borders.")
     Print("/hideme micro-menu on - Hide the micro menu.")
     Print("/hideme micro-menu off - Show the micro menu.")
@@ -206,22 +206,15 @@ local function GetExperienceFrames(target)
 end
 
 local function UpdateExperienceAlpha(frame, target)
-    local visible = not target.appliedHiding
-        or (target.expUntil and GetTime() < target.expUntil)
     updatingExperienceAlpha[frame] = true
-    frame:SetAlpha(visible and 1 or 0)
+    frame:SetAlpha(target.appliedHiding and 0 or 1)
     updatingExperienceAlpha[frame] = nil
 end
 
 local function ApplyExperience(target)
     local combat = InCombatLockdown()
-    if not combat and target.appliedHiding ~= HideMeDB[target.setting] then
+    if not combat then
         target.appliedHiding = HideMeDB[target.setting]
-        target.expUntil = nil
-        if target.expTimer then
-            target.expTimer:Cancel()
-            target.expTimer = nil
-        end
     end
     local frames = GetExperienceFrames(target)
     for _, frame in ipairs(frames) do
@@ -470,29 +463,11 @@ events:RegisterEvent("PLAYER_REGEN_DISABLED")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
 events:RegisterEvent("UNIT_HEALTH")
 events:RegisterEvent("UNIT_MAXHEALTH")
-events:RegisterEvent("PLAYER_XP_UPDATE")
-events:RegisterEvent("PLAYER_LEVEL_UP")
 events:RegisterEvent("UPDATE_CHAT_WINDOWS")
 events:RegisterEvent("UPDATE_FLOATING_CHAT_WINDOWS")
 events:SetScript("OnEvent", function(_, event, loadedAddon)
     HideCombatLog()
-    if event == "PLAYER_XP_UPDATE" or event == "PLAYER_LEVEL_UP" then
-        if not HideMeDB or (event == "PLAYER_XP_UPDATE" and loadedAddon ~= "player") then
-            return
-        end
-        local target = targets["exp-bar"]
-        ApplyTarget(target)
-        if target.appliedHiding then
-            if target.expTimer then target.expTimer:Cancel() end
-            target.expUntil = GetTime() + 2
-            ApplyTarget(target)
-            target.expTimer = C_Timer.NewTimer(2, function()
-                target.expTimer = nil
-                target.expUntil = nil
-                ApplyTarget(target)
-            end)
-        end
-    elseif event == "ADDON_LOADED" then
+    if event == "ADDON_LOADED" then
         if loadedAddon == addonName then
             if type(HideMeDB) ~= "table" then
                 HideMeDB = {}
@@ -594,7 +569,7 @@ SlashCmdList.HIDEME = function(message)
             or "always shown when active."
     elseif target.experience then
         action = HideMeDB[target.setting]
-            and "shown for 2 seconds after each XP change."
+            and "hidden permanently."
             or "always shown when available."
     end
     if InCombatLockdown() then

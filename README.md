@@ -36,7 +36,7 @@ Commands are case-insensitive. Invalid commands leave your settings unchanged. H
 | `/hideme chat-buttons off` | Show standard chat buttons |
 | `/hideme chat-tabs on` | Hide all standard chat tabs, including General and Combat Log |
 | `/hideme chat-tabs off` | Show only the General tab |
-| `/hideme exp-bar on` | Show all status bars and their borders for 2 seconds after each XP change |
+| `/hideme exp-bar on` | Permanently hide all status bars and their borders |
 | `/hideme exp-bar off` | Always show available status bars and their borders |
 | `/hideme micro-menu on` | Hide the micro menu |
 | `/hideme micro-menu off` | Show the micro menu |
@@ -70,11 +70,11 @@ Settings are saved **per character** and persist across restarts and `/reload`. 
 
 With `toolbars on`, the standard action bars become transparent without a target outside combat. With a target or in combat, they have full opacity. This covers the main action bar, seven additional action bars, and available pet, stance, possess and override bars. Blizzard continues to control which bars are enabled and appropriate for the current state; `off` restores full opacity without enabling disabled bars. Key bindings remain usable, and transparent bars can still receive mouse input. Bars supplied by other addons are not covered.
 
-With `exp-bar on`, the entire status-bar area becomes transparent, including its borders and all experience, reputation and other status-bar content. A player XP update or level-up reveals the whole area for two seconds; another XP change restarts that interval. Reputation and other non-XP updates do not start an interval. Enabling the setting or reloading does not start a display interval. The timer also runs during combat, while mode changes made in combat wait until combat ends. `off` restores full opacity; Blizzard still decides which status bars are available. Transparent status bars may still receive mouse input.
+With `exp-bar on`, the entire status-bar area remains transparent, including its borders and all experience, reputation and other status-bar content. XP gains, level-ups and other status updates do not reveal it. There is no display timer. Mode changes made in combat wait until combat ends. `off` restores full opacity; Blizzard still decides which status bars are available. Transparent status bars may still receive mouse input.
 
 ## Compatibility
 
-- Version: **0.13.1**
+- Version: **0.14.0**
 - Interface version: **16001** (WoW Forever Beta)
 - No additional addon dependencies
 - Controlled exclusively through chat commands
