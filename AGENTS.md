@@ -27,7 +27,7 @@
 - HideMe.lua: entire implementation.
 - Media/Icon.tga: 256x256 uncompressed 32-bit closed-eye addon-list texture, referenced by IconTexture in HideMe.toc.
 - Media/Icon.png: original generated artwork.
-- README.md: installation and usage.
+- README.md: concise English addon-page description, commands, and installation. Keep it focused on players, in the style of a CurseForge listing; omit implementation details, test reports, and development history (user request on October 12, 2026).
 - AGENTS.md: information for future work.
 
 ## Commands
