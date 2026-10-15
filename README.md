@@ -1,6 +1,6 @@
 # HideMe
 
-Version: 0.15.0
+Version: 0.16.2
 
 Enjoy a cleaner interface with **HideMe** for the **WoW Forever Beta**. Hide the UI elements you do not need and keep your attention on the game. Choose each element individually or enable all hiding options with one command.
 
@@ -28,6 +28,7 @@ Use `/hideme <option> on` to enable hiding or `/hideme <option> off` to disable 
 | `exp-bar` | Hide experience, reputation and other status bars, including borders |
 | `micro-menu` | Hide the micro menu |
 | `player-frame` | Show the player frame only with a target, in combat, or below full health |
+| `targetauras` | Hide buffs and debuffs on the standard target frame |
 | `toolbars` | Show active standard action bars only with a target or in combat |
 
 Type `/hideme status` to view your settings or `/hideme help` to see all commands.
@@ -41,6 +42,19 @@ With `chat-bar off`, the General chat input stays visible. With `chat-tabs off`,
 Place the **HideMe** folder in your game's `Interface/AddOns` folder, restart WoW, and enable **HideMe** in the addon list.
 
 ## Changelog
+
+### 0.16.2
+
+- Fixed `targetauras` for the Forever Beta's target aura display, including buffs and debuffs added after hiding is enabled.
+
+### 0.16.1
+
+- Fixed target buffs and debuffs remaining visible when their buttons are created after target-aura hiding is enabled, including when selecting yourself.
+
+### 0.16.0
+
+- Added `/hideme targetauras on` to hide target buffs and debuffs. Use `/hideme targetauras off` to restore available auras.
+- Included target auras in `all`, help, status, and per-character saved settings.
 
 ### 0.15.0
 

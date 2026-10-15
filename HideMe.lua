@@ -6,6 +6,9 @@ local combatLogFrames = {}
 local updatingCombatLogAlpha = {}
 local hidingCombatLog = false
 local updatingExperienceAlpha = {}
+local auraFrames = {}
+local updatingAuraAlpha = {}
+local hookedAuraFunctions = {}
 local healthAlphaCurve
 -- Numbers match the action bars in Blizzard's settings, not action pages.
 local toolbarNames = { "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight",
@@ -18,6 +21,12 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["targetauras"] = {
+        setting = "hideTargetAuras",
+        label = "Target auras",
+        frames = {},
+        targetAuras = true,
+    },
     ["addons-icon"] = {
         setting = "hideAddonsIcon",
         label = "Addons icon",
@@ -107,6 +116,8 @@ local function PrintHelp()
     Print("/hideme micro-menu off - Show the micro menu.")
     Print("/hideme player-frame on - Show with a target, in combat, or below full health.")
     Print("/hideme player-frame off - Always show the player frame.")
+    Print("/hideme targetauras on - Hide target buffs and debuffs.")
+    Print("/hideme targetauras off - Show available target buffs and debuffs.")
     Print("/hideme toolbars on - Show active action bars only with a target or in combat.")
     Print("/hideme toolbars off - Always show active action bars.")
     Print("/hideme except toolbar <1-8> - Also show this active bar below full health.")
@@ -348,7 +359,67 @@ local function ApplyChatInput(target)
     return #frames > 0
 end
 
+local function ApplyTargetAuras(target)
+    local combat = InCombatLockdown()
+    if not combat then target.appliedHiding = HideMeDB[target.setting] end
+    local found = false
+    local function Update(frame)
+        updatingAuraAlpha[frame] = true
+        frame:SetAlpha(target.appliedHiding and 0 or 1)
+        updatingAuraAlpha[frame] = nil
+    end
+    local function Add(frame)
+        if not frame then return end
+        found = true
+        Update(frame)
+        if not auraFrames[frame] and not combat then
+            hooksecurefunc(frame, "Show", function(self) Update(self) end)
+            hooksecurefunc(frame, "SetAlpha", function(self)
+                if target.appliedHiding and not updatingAuraAlpha[self] then Update(self) end
+            end)
+            auraFrames[frame] = true
+        end
+    end
+    for frame in pairs(auraFrames) do Update(frame) end
+    -- Change alpha only: never reveal unused buttons or inspect aura data.
+    for i = 1, MAX_TARGET_BUFFS or 32 do Add(_G["TargetFrameBuff" .. i]) end
+    for i = 1, MAX_TARGET_DEBUFFS or 32 do Add(_G["TargetFrameDebuff" .. i]) end
+    local frame = _G.TargetFrame
+    -- Forever renders both aura types inside one container, not named buttons.
+    if frame then
+        local content = frame.TargetFrameContent
+        local contextual = content and content.TargetFrameContentContextual
+        Add(contextual and contextual.Auras)
+    end
+    if frame and frame.auraPools then
+        for aura in frame.auraPools:EnumerateActive() do Add(aura) end
+    end
+    if not combat then
+        if type(_G.TargetFrame_UpdateAuras) == "function" and not hookedAuraFunctions.legacy then
+            hooksecurefunc("TargetFrame_UpdateAuras", function(self)
+                if self == _G.TargetFrame and HideMeDB then ApplyTargetAuras(target) end
+            end)
+            hookedAuraFunctions.legacy = true
+        end
+        if frame then
+            hookedAuraFunctions[frame] = hookedAuraFunctions[frame] or {}
+            for _, method in ipairs({ "UpdateAuras", "UpdateAuraFrames", "ConfigureAuraContainer" }) do
+                if type(frame[method]) == "function" and not hookedAuraFunctions[frame][method] then
+                    -- Classic creates named buttons inside UpdateAuras, after our event may run.
+                    hooksecurefunc(frame, method, function()
+                        if HideMeDB then ApplyTargetAuras(target) end
+                    end)
+                    hookedAuraFunctions[frame][method] = true
+                end
+            end
+        end
+    end
+    target.pending = combat or not found
+    return found
+end
+
 local function ApplyTarget(target)
+    if target.targetAuras then return ApplyTargetAuras(target) end
     if target.chatInput then
         return ApplyChatInput(target)
     end
@@ -488,6 +559,7 @@ events:RegisterEvent("PLAYER_REGEN_DISABLED")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
 events:RegisterEvent("UNIT_HEALTH")
 events:RegisterEvent("UNIT_MAXHEALTH")
+events:RegisterEvent("UNIT_AURA")
 events:RegisterEvent("UPDATE_CHAT_WINDOWS")
 events:RegisterEvent("UPDATE_FLOATING_CHAT_WINDOWS")
 events:SetScript("OnEvent", function(_, event, loadedAddon)
@@ -513,7 +585,10 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
             if HideMeDB then ApplyTarget(targets["chat-buttons"]) end
             if HideMeDB then ApplyTarget(targets["chat-tabs"]) end
             if HideMeDB then ApplyTarget(targets["chat-bar"]) end
+            if HideMeDB then ApplyTarget(targets.targetauras) end
         end
+    elseif event == "UNIT_AURA" then
+        if loadedAddon == "target" and HideMeDB then ApplyTargetAuras(targets.targetauras) end
     elseif event == "UPDATE_CHAT_WINDOWS" or event == "UPDATE_FLOATING_CHAT_WINDOWS" then
         if HideMeDB then
             ApplyTarget(targets["chat-buttons"])
@@ -527,6 +602,7 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
             or loadedAddon == "player") then
             ApplyTarget(targets["player-frame"])
             ApplyTarget(targets["toolbars"])
+            if event == "PLAYER_TARGET_CHANGED" then ApplyTargetAuras(targets.targetauras) end
         end
     else
         ApplyTargets(event == "PLAYER_REGEN_ENABLED")
