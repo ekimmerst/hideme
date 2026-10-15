@@ -7,6 +7,9 @@ local updatingCombatLogAlpha = {}
 local hidingCombatLog = false
 local updatingExperienceAlpha = {}
 local healthAlphaCurve
+-- Numbers match the action bars in Blizzard's settings, not action pages.
+local toolbarNames = { "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight",
+    "MultiBarRight", "MultiBarLeft", "MultiBar5", "MultiBar6", "MultiBar7" }
 if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     and Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step then
     healthAlphaCurve = C_CurveUtil.CreateCurve()
@@ -106,6 +109,8 @@ local function PrintHelp()
     Print("/hideme player-frame off - Always show the player frame.")
     Print("/hideme toolbars on - Show active action bars only with a target or in combat.")
     Print("/hideme toolbars off - Always show active action bars.")
+    Print("/hideme except toolbar <1-8> - Also show this active bar below full health.")
+    Print("/hideme except toolbar <1-8> off - Remove this exception.")
     Print("/hideme status - Show saved settings for all supported elements.")
     Print("/hideme help - Show this help.")
 end
@@ -134,6 +139,12 @@ local function PrintStatus()
         end
         Print(name .. " - " .. target.label .. ": " .. state)
     end
+    for number = 1, #toolbarNames do
+        if HideMeDB and HideMeDB.toolbarExceptions and HideMeDB.toolbarExceptions[number] then
+            Print("except toolbar " .. number .. " - Also visible below full health"
+                .. (targets.toolbars.pending and " - Pending toolbar update" or ""))
+        end
+    end
 end
 
 local function PlayerNeedsFrame()
@@ -161,6 +172,15 @@ local function UpdatePlayerAlpha(frame, target)
 end
 
 local function UpdateToolbarAlpha(frame, target)
+    for number, name in ipairs(toolbarNames) do
+        if frame == _G[name] and target.appliedExceptions and target.appliedExceptions[number] then
+            if healthAlphaCurve then
+                UpdatePlayerAlpha(frame, target)
+                return
+            end
+            break
+        end
+    end
     local hidden = target.appliedHiding and not PlayerNeedsFrame()
     frame:SetAlpha(hidden and 0 or 1)
 end
@@ -169,6 +189,11 @@ local function ApplyToolbars(target)
     local combat = InCombatLockdown()
     if not combat then
         target.appliedHiding = HideMeDB[target.setting]
+        target.appliedExceptions = {}
+        for number = 1, #toolbarNames do
+            target.appliedExceptions[number] = HideMeDB.toolbarExceptions
+                and HideMeDB.toolbarExceptions[number] == true or false
+        end
     end
     local found = false
     for _, frameName in ipairs(target.frames) do
@@ -475,6 +500,11 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
             for _, target in pairs(targets) do
                 HideMeDB[target.setting] = HideMeDB[target.setting] == true
             end
+            local saved = HideMeDB.toolbarExceptions
+            HideMeDB.toolbarExceptions = {}
+            for number = 1, #toolbarNames do
+                HideMeDB.toolbarExceptions[number] = type(saved) == "table" and saved[number] == true
+            end
         else
             ApplyTargets(true)
             -- Optional action bars may be loaded after the main UI.
@@ -496,9 +526,7 @@ events:SetScript("OnEvent", function(_, event, loadedAddon)
         if HideMeDB and (event ~= "UNIT_HEALTH" and event ~= "UNIT_MAXHEALTH"
             or loadedAddon == "player") then
             ApplyTarget(targets["player-frame"])
-            if event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_TARGET_CHANGED" then
-                ApplyTarget(targets["toolbars"])
-            end
+            ApplyTarget(targets["toolbars"])
         end
     else
         ApplyTargets(event == "PLAYER_REGEN_ENABLED")
@@ -518,6 +546,34 @@ SlashCmdList.HIDEME = function(message)
 
     if message == "status" then
         PrintStatus()
+        return
+    end
+
+    if message:match("^except%s") or message == "except" then
+        local number, mode = message:match("^except%s+toolbar%s+([1-8])%s+(%S+)$")
+        if not number then
+            number = message:match("^except%s+toolbar%s+([1-8])$")
+            mode = ""
+        end
+        if not number or (mode ~= "" and mode ~= "off") then
+            Print("Invalid command. Use /hideme except toolbar <1-8> [off].")
+            return
+        end
+        number = tonumber(number)
+        HideMeDB.toolbarExceptions = HideMeDB.toolbarExceptions or {}
+        HideMeDB.toolbarExceptions[number] = mode ~= "off"
+        ApplyToolbars(targets.toolbars)
+        local text = "Toolbar " .. number .. " health exception " .. (mode == "off" and "removed." or "saved.")
+        if InCombatLockdown() then
+            text = text .. " The change will take effect after combat."
+        elseif not _G[toolbarNames[number]] then
+            text = text .. " The toolbar is not loaded yet."
+        end
+        if mode ~= "off" then
+            text = text .. " Applies while toolbar hiding is on."
+            if not healthAlphaCurve then text = text .. " Health API unavailable; target/combat visibility only." end
+        end
+        Print(text)
         return
     end
 
