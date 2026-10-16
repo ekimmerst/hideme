@@ -16,7 +16,7 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 15, 2026: version 0.16.2; interface version 16001.
+- As of October 16, 2026: version 0.17.0; interface version 16001.
 - Last verified commit before the 0.15.0 publication: 77e5927 (Simplify README for addon users).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
@@ -48,6 +48,8 @@ Controlled exclusively through chat, without a settings interface.
 - /hideme chat-buttons off: show standard chat buttons.
 - /hideme chat-tabs on: hide all standard chat tabs, including General and Combat Log.
 - /hideme chat-tabs off: show only the General tab (ChatFrame1); all other tabs remain hidden.
+- /hideme day-night-indicator on: hide the minimap day-night indicator.
+- /hideme day-night-indicator off: show the minimap day-night indicator.
 - /hideme exp-bar on: permanently hide the entire status-bar area and borders.
 - /hideme exp-bar off: always show the available status-bar area and borders.
 - /hideme micro-menu on: hide the micro menu.
@@ -74,6 +76,7 @@ it does not measure actual visibility when other addons interfere.
 
 ## Technical implementation
 
+- day-night-indicator: HideMeDB.hideDayNightIndicator; MinimapCluster.DielFrame, discovered through GetTargetFrames. Confirmed in the forever branch's Blizzard_Minimap/Camelot/Diel.lua, where the frame contains both the cycle background and border. Uses generic Show/Hide and Show/SetShown enforcement, combat deferral, missing-frame retry and per-character persistence. Independent of GameTimeFrame and the minimap itself. Included automatically in all and status. The user confirmed on October 16, 2026 that version 0.17.0 works in game; the full combat/persistence compatibility matrix remains pending.
 - The user confirmed on October 15, 2026 that targetauras works in game with version 0.16.2. This supersedes earlier pending basic-functionality notes; the full combat/persistence compatibility matrix remains pending.
 - targets defines the setting key, label, and frames for each parameter.
 - Versions 0.16.0 and 0.16.1 both failed in game. Their tests modeled older Classic named buttons/pools, not Forever. Version 0.16.2 uses TargetFrame.TargetFrameContent.TargetFrameContentContextual.Auras, the shared buff/debuff container returned by GetAuraContainer in the forever branch of Gethe/wow-ui-source (Interface/AddOns/Blizzard_UnitFrame/Mainline/TargetFrame.lua; Camelot/TargetFrame.lua uses OnLoadBase). This source branch is required for future Forever API research. Container alpha hides later children automatically; Show/SetAlpha enforcement and ConfigureAuraContainer post-hook retain hiding across updates. Legacy paths remain as fallbacks. Discovery now reports pending if no aura display was found instead of treating the mere existence of TargetFrame as success. In-game confirmation remains pending.
@@ -114,6 +117,7 @@ it does not measure actual visibility when other addons interfere.
 
 ## Changes and verification
 
+- Version 0.17.0 passed Lua 5.1 simulations for day-night-indicator default/saved startup, on/off, Show/SetShown enforcement, combat-deferred changes, invalid commands, late-frame discovery, all on/off, help/status and independence from the calendar and minimap. Existing status-bar regressions and git diff --check passed. The user subsequently confirmed basic functionality in game on October 16, 2026. The full combat/persistence compatibility matrix remains pending.
 - Add new targets to targets, help, and README.
 - Status uses targets automatically.
 - Preserve existing setting keys and the meaning of on/off.

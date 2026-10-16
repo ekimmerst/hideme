@@ -1,10 +1,10 @@
 # HideMe
 
-Version: 0.16.2
+Version: 0.17.0
 
 Enjoy a cleaner interface with **HideMe** for the **WoW Forever Beta**. Hide the UI elements you do not need and keep your attention on the game. Choose each element individually or enable all hiding options with one command.
 
-HideMe can hide the bag bar, micro menu, experience and reputation bars, chat controls, and minimap calendar and addon icons. When their hiding options are enabled, action bars appear with a target or in combat, and the player frame also appears whenever you are below full health.
+HideMe can hide the bag bar, micro menu, experience and reputation bars, chat controls, and the minimap calendar icon, addon icon, and day-night indicator. When their hiding options are enabled, action bars appear with a target or in combat, and the player frame also appears whenever you are below full health.
 
 ## Getting started
 
@@ -25,6 +25,7 @@ Use `/hideme <option> on` to enable hiding or `/hideme <option> off` to disable 
 | `chat-bar` | Hide chat input while idle; press Enter to type |
 | `chat-buttons` | Hide standard chat buttons and scroll controls |
 | `chat-tabs` | Hide all chat tabs |
+| `day-night-indicator` | Hide the minimap day-night indicator |
 | `exp-bar` | Hide experience, reputation and other status bars, including borders |
 | `micro-menu` | Hide the micro menu |
 | `player-frame` | Show the player frame only with a target, in combat, or below full health |
@@ -42,6 +43,11 @@ With `chat-bar off`, the General chat input stays visible. With `chat-tabs off`,
 Place the **HideMe** folder in your game's `Interface/AddOns` folder, restart WoW, and enable **HideMe** in the addon list.
 
 ## Changelog
+
+### 0.17.0
+
+- Added `/hideme day-night-indicator on` to hide the minimap day-night indicator. Use `/hideme day-night-indicator off` to show it again.
+- Included the new option in `all`, help, status, and per-character saved settings.
 
 ### 0.16.2
 

@@ -21,6 +21,13 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["day-night-indicator"] = {
+        setting = "hideDayNightIndicator",
+        label = "Day-night indicator",
+        frames = {},
+        dayNightIndicator = true,
+        enforceSetShown = true,
+    },
     ["targetauras"] = {
         setting = "hideTargetAuras",
         label = "Target auras",
@@ -110,6 +117,8 @@ local function PrintHelp()
     Print("/hideme chat-buttons off - Show standard chat buttons.")
     Print("/hideme chat-tabs on - Hide all standard chat tabs.")
     Print("/hideme chat-tabs off - Show only the General tab.")
+    Print("/hideme day-night-indicator on - Hide the minimap day-night indicator.")
+    Print("/hideme day-night-indicator off - Show the minimap day-night indicator.")
     Print("/hideme exp-bar on - Hide all status bars and borders permanently.")
     Print("/hideme exp-bar off - Always show available status bars and borders.")
     Print("/hideme micro-menu on - Hide the micro menu.")
@@ -280,6 +289,9 @@ local function GetTargetFrames(target)
         end
     end
     for _, name in ipairs(target.frames) do Add(_G[name]) end
+    if target.dayNightIndicator then
+        Add(_G.MinimapCluster and _G.MinimapCluster.DielFrame)
+    end
     if target.chatButtons then
         for _, name in ipairs({ "ChatFrameMenuButton", "ChatFrameChannelButton",
             "QuickJoinToastButton", "ChatFrameToggleVoiceDeafenButton",

@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\HideMe\Media\Icon
 ## Notes: Hides and shows UI elements using chat commands.
 ## Author: HideMe
-## Version: 0.16.2
+## Version: 0.17.0
 ## SavedVariablesPerCharacter: HideMeDB
 
 HideMe.lua
