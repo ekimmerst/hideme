@@ -16,7 +16,7 @@
 - Public repository: https://github.com/ekimmerst/hideme
 - Remote origin: https://github.com/ekimmerst/hideme.git
 - Branch: main, tracking origin/main.
-- As of October 16, 2026: version 0.17.0; interface version 16001.
+- As of October 16, 2026: version 0.18.0; interface version 16001.
 - Last verified commit before the 0.15.0 publication: 77e5927 (Simplify README for addon users).
 - The user successfully published the addon previously.
 - No external addon dependencies and no build step.
@@ -52,6 +52,8 @@ Controlled exclusively through chat, without a settings interface.
 - /hideme day-night-indicator off: show the minimap day-night indicator.
 - /hideme exp-bar on: permanently hide the entire status-bar area and borders.
 - /hideme exp-bar off: always show the available status-bar area and borders.
+- /hideme fishing-bobber-tooltip on: hide the fishing bobber tooltip.
+- /hideme fishing-bobber-tooltip off: allow normal mouseover tooltips again.
 - /hideme micro-menu on: hide the micro menu.
 - /hideme micro-menu off: show the micro menu.
 - /hideme player-frame on: show the player frame with a target, in combat, or below full health.
@@ -75,6 +77,8 @@ and saved on/off state. Pending changes are marked. Status displays settings;
 it does not measure actual visibility when other addons interfere.
 
 ## Technical implementation
+
+- fishing-bobber-tooltip: HideMeDB.hideFishingBobberTooltip. GameTooltip OnShow/OnUpdate hooks inspect the first line only for UIParent-owned world tooltips; secret text is skipped. Matches English Fishing Bobber, German Angelschwimmer, or FISHING_BOBBER if provided by the client. Other locales without that global are not yet supported. Mode changes and hook installation defer in combat; installed hooks enforce the applied mode. Off relies on the next normal mouseover and never forces stale tooltip content to show. Included in all/help/status and per-character persistence. The user confirmed basic functionality in game on October 16, 2026 with version 0.18.0; the full combat/persistence compatibility matrix remains pending.
 
 - day-night-indicator: HideMeDB.hideDayNightIndicator; MinimapCluster.DielFrame, discovered through GetTargetFrames. Confirmed in the forever branch's Blizzard_Minimap/Camelot/Diel.lua, where the frame contains both the cycle background and border. Uses generic Show/Hide and Show/SetShown enforcement, combat deferral, missing-frame retry and per-character persistence. Independent of GameTimeFrame and the minimap itself. Included automatically in all and status. The user confirmed on October 16, 2026 that version 0.17.0 works in game; the full combat/persistence compatibility matrix remains pending.
 - The user confirmed on October 15, 2026 that targetauras works in game with version 0.16.2. This supersedes earlier pending basic-functionality notes; the full combat/persistence compatibility matrix remains pending.
@@ -116,6 +120,8 @@ it does not measure actual visibility when other addons interfere.
 - Other addons can affect the same frames.
 
 ## Changes and verification
+
+- Version 0.18.0 passed Lua 5.1 simulations for fishing-bobber-tooltip default/saved startup, late loading, English/German/client-global names, unrelated tooltips, secret text, OnShow/OnUpdate, combat-deferred modes, invalid commands, all on/off, help and status. Day-night-indicator and permanent status-bar regressions passed. The user subsequently confirmed basic functionality in game on October 16, 2026. The full combat/persistence compatibility matrix remains pending.
 
 - Version 0.17.0 passed Lua 5.1 simulations for day-night-indicator default/saved startup, on/off, Show/SetShown enforcement, combat-deferred changes, invalid commands, late-frame discovery, all on/off, help/status and independence from the calendar and minimap. Existing status-bar regressions and git diff --check passed. The user subsequently confirmed basic functionality in game on October 16, 2026. The full combat/persistence compatibility matrix remains pending.
 - Add new targets to targets, help, and README.

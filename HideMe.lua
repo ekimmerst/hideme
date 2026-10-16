@@ -9,6 +9,7 @@ local updatingExperienceAlpha = {}
 local auraFrames = {}
 local updatingAuraAlpha = {}
 local hookedAuraFunctions = {}
+local hookedBobberTooltips = {}
 local healthAlphaCurve
 -- Numbers match the action bars in Blizzard's settings, not action pages.
 local toolbarNames = { "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight",
@@ -21,6 +22,12 @@ if UnitHealthPercent and C_CurveUtil and C_CurveUtil.CreateCurve
     healthAlphaCurve:AddPoint(1, 0)
 end
 local targets = {
+    ["fishing-bobber-tooltip"] = {
+        setting = "hideFishingBobberTooltip",
+        label = "Fishing bobber tooltip",
+        frames = {},
+        fishingBobberTooltip = true,
+    },
     ["day-night-indicator"] = {
         setting = "hideDayNightIndicator",
         label = "Day-night indicator",
@@ -121,6 +128,8 @@ local function PrintHelp()
     Print("/hideme day-night-indicator off - Show the minimap day-night indicator.")
     Print("/hideme exp-bar on - Hide all status bars and borders permanently.")
     Print("/hideme exp-bar off - Always show available status bars and borders.")
+    Print("/hideme fishing-bobber-tooltip on - Hide the fishing bobber tooltip.")
+    Print("/hideme fishing-bobber-tooltip off - Show the fishing bobber tooltip normally.")
     Print("/hideme micro-menu on - Hide the micro menu.")
     Print("/hideme micro-menu off - Show the micro menu.")
     Print("/hideme player-frame on - Show with a target, in combat, or below full health.")
@@ -430,7 +439,47 @@ local function ApplyTargetAuras(target)
     return found
 end
 
+-- World-object tooltips use the first line for their localized object name.
+local function HideFishingBobberTooltip(tooltip, target)
+    if not target.appliedHiding then return end
+    if tooltip:GetOwner() ~= _G.UIParent then return end
+    local line = _G.GameTooltipTextLeft1
+    local text = line and line:GetText()
+    if issecretvalue and issecretvalue(text) then return end
+    if type(text) ~= "string" then return end
+    local name = _G.FISHING_BOBBER
+    if issecretvalue and issecretvalue(name) then name = nil end
+    if text == "Fishing Bobber" or text == "Angelschwimmer"
+        or (type(name) == "string" and text == name) then
+        tooltip:Hide()
+    end
+end
+
+local function ApplyFishingBobberTooltip(target)
+    if InCombatLockdown() then
+        target.pending = true
+        return
+    end
+    local tooltip = _G.GameTooltip
+    if not tooltip then
+        target.pending = true
+        return false
+    end
+    target.appliedHiding = HideMeDB[target.setting]
+    if not hookedBobberTooltips[tooltip] then
+        -- OnUpdate also catches content changes while the tooltip stays shown.
+        tooltip:HookScript("OnShow", function(self) HideFishingBobberTooltip(self, target) end)
+        tooltip:HookScript("OnUpdate", function(self) HideFishingBobberTooltip(self, target) end)
+        hookedBobberTooltips[tooltip] = true
+    end
+    -- Off leaves normal mouseover handling in charge; never show stale content.
+    if tooltip:IsShown() then HideFishingBobberTooltip(tooltip, target) end
+    target.pending = false
+    return true
+end
+
 local function ApplyTarget(target)
+    if target.fishingBobberTooltip then return ApplyFishingBobberTooltip(target) end
     if target.targetAuras then return ApplyTargetAuras(target) end
     if target.chatInput then
         return ApplyChatInput(target)

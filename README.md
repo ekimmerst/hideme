@@ -1,6 +1,6 @@
 # HideMe
 
-Version: 0.17.0
+Version: 0.18.0
 
 Enjoy a cleaner interface with **HideMe** for the **WoW Forever Beta**. Hide the UI elements you do not need and keep your attention on the game. Choose each element individually or enable all hiding options with one command.
 
@@ -27,6 +27,7 @@ Use `/hideme <option> on` to enable hiding or `/hideme <option> off` to disable 
 | `chat-tabs` | Hide all chat tabs |
 | `day-night-indicator` | Hide the minimap day-night indicator |
 | `exp-bar` | Hide experience, reputation and other status bars, including borders |
+| `fishing-bobber-tooltip` | Hide the fishing bobber tooltip (English and German clients) |
 | `micro-menu` | Hide the micro menu |
 | `player-frame` | Show the player frame only with a target, in combat, or below full health |
 | `targetauras` | Hide buffs and debuffs on the standard target frame |
@@ -43,6 +44,11 @@ With `chat-bar off`, the General chat input stays visible. With `chat-tabs off`,
 Place the **HideMe** folder in your game's `Interface/AddOns` folder, restart WoW, and enable **HideMe** in the addon list.
 
 ## Changelog
+
+### 0.18.0
+
+- Added `/hideme fishing-bobber-tooltip on` to hide the fishing bobber tooltip on English and German clients. Use `off` to show it normally on mouseover.
+- Included the option in `all`, help, status, and per-character saved settings.
 
 ### 0.17.0
 
